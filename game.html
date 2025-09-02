@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitty Party Dhamaka!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation; /* Prevents double-tap zoom on mobile */
+        }
+        .fancy-font {
+            font-family: 'Poppins', sans-serif;
+        }
+        .hidden { display: none; }
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ec4899' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .tambola-called {
+            transform: scale(0.95);
+            background-color: #fca5a5 !important;
+            color: #7f1d1d !important;
+            border-color: #7f1d1d !important;
+            text-decoration: line-through;
+        }
+        .tambola-cell.striked {
+             background-color: #22c55e !important;
+             color: white !important;
+             border-color: #166534 !important;
+             transform: rotate(-5deg) scale(1.1);
+             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        @keyframes tada {
+            0% {transform: scale(1);}
+            10%, 20% {transform: scale(0.9) rotate(-3deg);}
+            30%, 50%, 70%, 90% {transform: scale(1.1) rotate(3deg);}
+            40%, 60%, 80% {transform: scale(1.1) rotate(-3deg);}
+            100% {transform: scale(1) rotate(0);}
+        }
+        .animate-tada {
+            animation: tada 1s ease-in-out;
+        }
+        
+        /* Avatar Animations */
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #ec4899;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            40%, 43% {
+                transform: translateY(-15px) scale(1.1);
+            }
+        }
+        
+        .avatar.bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-5deg); }
+            50% { transform: scale(1.3) rotate(5deg); }
+            75% { transform: scale(1.2) rotate(-3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        .avatar.celebrate {
+            animation: celebrate 0.6s ease-in-out;
+            border-color: #22c55e;
+        }
+        
+        @keyframes thinking {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+        
+        .avatar.thinking {
+            animation: thinking 1s infinite;
+            border-color: #f59e0b;
+        }
+        
+        @keyframes sad {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.9); }
+        }
+        
+        .avatar.sad {
+            animation: sad 1s ease-in-out;
+            border-color: #ef4444;
+        }
+        
+        .avatar-speech {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 2px solid #ec4899;
+            border-radius: 15px;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #ec4899;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .avatar-speech:after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #ec4899;
+        }
+        
+        .avatar-speech.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-pink-50">
+    <div id="game-container" class="max-w-md mx-auto min-h-screen bg-pink-100 bg-pattern shadow-2xl flex flex-col">
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="flex flex-col items-center justify-center text-center p-8 h-full">
+            <h1 class="text-5xl fancy-font font-bold text-pink-600 drop-shadow-lg">Kitty Party</h1>
+            <h2 class="text-6xl fancy-font font-bold text-yellow-500 drop-shadow-lg mb-4">Dhamaka!</h2>
+            <img src="https://placehold.co/200x200/fbcfe8/ec4899?text=🎁" alt="Gift Box" class="rounded-full my-8 shadow-xl border-4 border-white">
+            <p class="text-gray-700 mb-6">Roz khelo aur jeeto exciting rewards!</p>
+            <button onclick="startGame()" class="w-full bg-pink-600 text-white font-bold py-4 px-6 rounded-xl text-2xl shadow-lg hover:bg-pink-700 transform hover:scale-105 transition duration-300">
+                Khelna Shuru Karein!
+            </button>
+            <p class="text-xs text-gray-500 mt-4">Daily 1 Free Game</p>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden flex-grow flex flex-col p-4 space-y-4">
+            <!-- Avatar Section -->
+            <div class="flex justify-center mb-2">
+                <div id="game-avatar" class="avatar bounce relative">
+                    <span id="avatar-face">😊</span>
+                    <div id="avatar-speech" class="avatar-speech">Let's play!</div>
+                </div>
+            </div>
+            
+            <header class="flex justify-between items-center bg-white p-2 rounded-xl shadow-md">
+                <div class="text-lg font-bold text-pink-700">Round <span id="round-number">1</span>/3</div>
+                <div class="text-lg font-bold text-yellow-600">Score: <span id="score">0</span></div>
+            </header>
+
+            <!-- Round 1: Guess the Daam -->
+            <div id="round-1" class="hidden flex-grow flex flex-col items-center justify-center text-center p-4 bg-white rounded-2xl shadow-inner">
+                 <h3 class="text-2xl font-bold text-gray-800 mb-2">Guess the Daam!</h3>
+                 <p class="text-gray-600 mb-4">Sahi price range chuno:</p>
+                 <img id="price-product-img" src="" alt="Product" class="h-48 w-48 object-contain mb-4 rounded-lg">
+                 <h4 id="price-product-name" class="text-xl font-semibold text-pink-800 mb-4"></h4>
+                 <div id="price-options" class="grid grid-cols-2 gap-4 w-full">
+                     <!-- Options will be injected here -->
+                 </div>
+            </div>
+
+            <!-- Round 2: Saree mein Samaan -->
+            <div id="round-2" class="hidden flex-grow flex flex-col items-center justify-around text-center p-4 bg-white rounded-2xl shadow-inner">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Saree mein Samaan!</h3>
+                <p class="text-gray-600 mb-4">Yaad rakho, kaunsa samaan dekha tha?</p>
+                <div id="memory-container" class="relative h-48 w-full flex items-center justify-center">
+                    <!-- Animation/display area -->
+                </div>
+                <div id="memory-options" class="grid grid-cols-2 gap-4 w-full mt-4">
+                    <!-- Options will be injected here -->
+                </div>
+            </div>
+
+            <!-- Round 3: Bumper Tambola -->
+            <div id="round-3" class="hidden flex-grow flex flex-col items-center justify-start text-center p-4 bg-white rounded-2xl shadow-inner">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Bumper Tambola!</h3>
+                <p class="text-gray-600 mb-2">Ek line complete karo aur jeeto!</p>
+                <div id="tambola-caller" class="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-2 mb-3 w-full">
+                    <span class="text-gray-600">Called: </span>
+                    <span id="tambola-called-item" class="font-bold text-pink-700 text-lg"></span>
+                </div>
+                <div id="tambola-ticket" class="grid grid-cols-3 gap-2 w-full p-2 bg-pink-50 border-2 border-pink-200 rounded-lg">
+                    <!-- Ticket cells will be injected here -->
+                </div>
+                 <button id="tambola-claim-btn" onclick="checkTambolaWin()" class="mt-4 bg-green-600 text-white font-bold py-3 px-6 rounded-xl text-xl shadow-lg hover:bg-green-700 disabled:bg-gray-400" disabled>
+                    Claim Line!
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Score Screen -->
+        <div id="score-screen" class="hidden flex flex-col items-center justify-center text-center p-8 h-full">
+             <h2 class="text-4xl fancy-font font-bold text-pink-600 drop-shadow-lg mb-2">Game Over!</h2>
+             <p class="text-gray-700 mb-4">Aapka Final Score:</p>
+             <div id="final-score" class="text-8xl font-bold text-yellow-500 mb-6 drop-shadow-xl">0</div>
+             <div id="reward-container" class="w-full bg-white p-6 rounded-2xl shadow-lg border-2 border-dashed border-pink-400 mb-6 text-center">
+                <h4 class="font-bold text-xl text-green-700 mb-2">🎉 Aapke Liye Reward! 🎉</h4>
+                <p id="reward-text" class="text-gray-800 text-lg"></p>
+                <p id="coupon-code" class="text-2xl font-bold my-3 p-2 bg-yellow-100 border-2 border-dashed border-yellow-400 text-yellow-700 rounded-lg"></p>
+             </div>
+             <button onclick="shareOnWhatsApp()" class="w-full bg-green-500 text-white font-bold py-4 px-6 rounded-xl text-2xl shadow-lg hover:bg-green-600 transform hover:scale-105 transition duration-300 mb-4">
+                Share on WhatsApp
+             </button>
+             <button onclick="restartGame()" class="w-full bg-gray-500 text-white font-bold py-2 px-6 rounded-xl text-lg hover:bg-gray-600 transition duration-300">
+                Dobara Khelein?
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Game State & Config ---
+        const gameState = {
+            score: 0,
+            round: 0,
+            currentProduct: null,
+            memoryItems: [],
+            correctMemoryItem: null,
+            tambolaTicket: [],
+            tambolaCalled: [],
+        };
+
+        const products = [
+            { id: 1, name: 'Designer Saree', image: 'https://placehold.co/150x150/f472b6/ffffff?text=Saree', price: 1499, category: 'Fashion' },
+            { id: 2, name: 'Pressure Cooker', image: 'https://placehold.co/150x150/78716c/ffffff?text=Cooker', price: 2199, category: 'Kitchen' },
+            { id: 3, name: 'Masala Dabba', image: 'https://placehold.co/150x150/f59e0b/ffffff?text=Masala', price: 599, category: 'Kitchen' },
+            { id: 4, name: 'Bedsheet Set', image: 'https://placehold.co/150x150/22c55e/ffffff?text=Bedsheet', price: 899, category: 'Home' },
+            { id: 5, name: 'Gold-Plated Necklace', image: 'https://placehold.co/150x150/facc15/ffffff?text=Necklace', price: 1250, category: 'Jewellery' },
+            { id: 6, name: 'Herbal Face Cream', image: 'https://placehold.co/150x150/84cc16/ffffff?text=Cream', price: 349, category: 'Beauty' },
+            { id: 7, name: 'Dinner Set', image: 'https://placehold.co/150x150/60a5fa/ffffff?text=Dinner+Set', price: 2999, category: 'Kitchen' },
+            { id: 8, name: 'Handbag', image: 'https://placehold.co/150x150/c084fc/ffffff?text=Handbag', price: 750, category: 'Fashion' },
+        ];
+
+        const tambolaCategories = ['Fashion', 'Kitchen', 'Home', 'Jewellery', 'Beauty', 'Electronics', 'Grocery', 'Pooja', 'Kids'];
+
+        // Global variable for tambola interval
+        let tambolaCallInterval;
+
+        // Avatar Controller
+        const AvatarController = {
+            avatar: null,
+            face: null,
+            speech: null,
+            
+            init() {
+                this.avatar = document.getElementById('game-avatar');
+                this.face = document.getElementById('avatar-face');
+                this.speech = document.getElementById('avatar-speech');
+            },
+            
+            setExpression(emoji) {
+                if (this.face) {
+                    this.face.textContent = emoji;
+                }
+            },
+            
+            setAnimation(animationClass) {
+                if (this.avatar) {
+                    // Remove all animation classes
+                    this.avatar.classList.remove('bounce', 'celebrate', 'thinking', 'sad');
+                    // Add new animation class
+                    if (animationClass) {
+                        this.avatar.classList.add(animationClass);
+                    }
+                }
+            },
+            
+            speak(message, duration = 2000) {
+                if (this.speech) {
+                    this.speech.textContent = message;
+                    this.speech.classList.add('show');
+                    
+                    setTimeout(() => {
+                        this.speech.classList.remove('show');
+                    }, duration);
+                }
+            },
+            
+            // Predefined avatar states
+            happy() {
+                this.setExpression('😊');
+                this.setAnimation('bounce');
+            },
+            
+            celebrate() {
+                this.setExpression('🎉');
+                this.setAnimation('celebrate');
+                this.speak('Shabash!', 1500);
+            },
+            
+            thinking() {
+                this.setExpression('🤔');
+                this.setAnimation('thinking');
+                this.speak('Hmm...', 1000);
+            },
+            
+            sad() {
+                this.setExpression('😔');
+                this.setAnimation('sad');
+                this.speak('Koi baat nahi!', 1500);
+            },
+            
+            excited() {
+                this.setExpression('🤩');
+                this.setAnimation('bounce');
+                this.speak('Wow! Amazing!', 1500);
+            },
+            
+            greet(round) {
+                const greetings = {
+                    1: { emoji: '💰', message: 'Price guess karo!' },
+                    2: { emoji: '🧠', message: 'Memory test!' },
+                    3: { emoji: '🎯', message: 'Tambola time!' }
+                };
+                
+                const greeting = greetings[round] || { emoji: '😊', message: 'Let\'s play!' };
+                this.setExpression(greeting.emoji);
+                this.setAnimation('bounce');
+                this.speak(greeting.message, 2000);
+            }
+        };
+
+        // --- UI Navigation ---
+        const screens = ['start-screen', 'game-screen', 'score-screen'];
+        const rounds = ['round-1', 'round-2', 'round-3'];
+
+        function showScreen(screenId) {
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function showRound(roundId) {
+            rounds.forEach(id => document.getElementById(id).classList.add('hidden'));
+            if(roundId) document.getElementById(roundId).classList.remove('hidden');
+        }
+
+        // --- Game Logic ---
+        function startGame() {
+            gameState.score = 0;
+            gameState.round = 0;
+            updateScoreDisplay();
+            showScreen('game-screen');
+            
+            // Initialize avatar when game starts
+            AvatarController.init();
+            AvatarController.excited();
+            AvatarController.speak('Chalo shuru karte hain!', 2000);
+            
+            nextRound();
+        }
+
+        function restartGame() {
+            showScreen('start-screen');
+        }
+
+        function nextRound() {
+            gameState.round++;
+            if (gameState.round > 3) {
+                endGame();
+                return;
+            }
+            document.getElementById('round-number').innerText = gameState.round;
+            showRound(rounds[gameState.round - 1]);
+            
+            // Avatar greets for each round
+            AvatarController.greet(gameState.round);
+            
+            if (gameState.round === 1) setupPriceRound();
+            if (gameState.round === 2) setupMemoryRound();
+            if (gameState.round === 3) setupTambolaRound();
+        }
+
+        function updateScore(points) {
+            gameState.score += points;
+            updateScoreDisplay();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score').innerText = gameState.score;
+        }
+
+        // --- Round 1: Guess the Daam ---
+        function setupPriceRound() {
+            const product = products[Math.floor(Math.random() * products.length)];
+            gameState.currentProduct = product;
+
+            document.getElementById('price-product-img').src = product.image;
+            document.getElementById('price-product-name').innerText = product.name;
+
+            const optionsContainer = document.getElementById('price-options');
+            optionsContainer.innerHTML = '';
+            const correctPrice = product.price;
+            const priceRanges = generatePriceOptions(correctPrice);
+            
+            priceRanges.forEach(range => {
+                const button = document.createElement('button');
+                button.className = 'card bg-pink-100 text-pink-800 font-semibold py-4 px-2 rounded-lg text-lg border-2 border-pink-200';
+                button.innerText = `₹${range.min} - ₹${range.max}`;
+                button.onclick = () => checkPriceAnswer(range.min <= correctPrice && correctPrice <= range.max, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function generatePriceOptions(price) {
+            const options = [];
+            const correctOption = {
+                min: Math.floor(price / 100) * 100,
+                max: Math.ceil(price / 100) * 100 - 1
+            };
+            options.push(correctOption);
+
+            while (options.length < 4) {
+                const deviation = (Math.floor(Math.random() * 5) + 2) * 100 * (Math.random() > 0.5 ? 1 : -1);
+                const newPrice = price + deviation;
+                if (newPrice > 0) {
+                     const newOption = {
+                        min: Math.floor(newPrice / 100) * 100,
+                        max: Math.ceil(newPrice / 100) * 100 - 1
+                    };
+                    if (!options.some(o => o.min === newOption.min)) {
+                        options.push(newOption);
+                    }
+                }
+            }
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function checkPriceAnswer(isCorrect, button) {
+            document.querySelectorAll('#price-options button').forEach(btn => btn.disabled = true);
+            if (isCorrect) {
+                updateScore(10);
+                button.classList.remove('bg-pink-100', 'border-pink-200');
+                button.classList.add('bg-green-500', 'text-white', 'border-green-700', 'animate-tada');
+                AvatarController.celebrate();
+            } else {
+                 button.classList.remove('bg-pink-100', 'border-pink-200');
+                button.classList.add('bg-red-500', 'text-white', 'border-red-700');
+                AvatarController.sad();
+            }
+            setTimeout(nextRound, 1500);
+        }
+
+        // --- Round 2: Saree mein Samaan ---
+        function setupMemoryRound() {
+            const container = document.getElementById('memory-container');
+            container.innerHTML = 'Get Ready...';
+            
+            let shuffledProducts = [...products].sort(() => 0.5 - Math.random());
+            gameState.memoryItems = shuffledProducts.slice(0, 3);
+            gameState.correctMemoryItem = gameState.memoryItems[0];
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'flex space-x-4';
+                gameState.memoryItems.forEach(item => {
+                    const img = document.createElement('img');
+                    img.src = item.image;
+                    img.alt = item.name;
+                    img.className = 'h-20 w-20 object-contain bg-white p-1 rounded-md shadow-md';
+                    itemsDiv.appendChild(img);
+                });
+                container.appendChild(itemsDiv);
+
+                setTimeout(() => {
+                    container.innerHTML = '<span class="text-2xl">🤔</span>';
+                    setupMemoryOptions();
+                }, 3000);
+
+            }, 1000);
+        }
+
+        function setupMemoryOptions() {
+            const optionsContainer = document.getElementById('memory-options');
+            optionsContainer.innerHTML = '';
+            let options = [gameState.correctMemoryItem];
+            let allProducts = [...products];
+
+            while (options.length < 4) {
+                let randomProd = allProducts[Math.floor(Math.random() * allProducts.length)];
+                if (!options.some(o => o.id === randomProd.id) && !gameState.memoryItems.some(i => i.id === randomProd.id)) {
+                    options.push(randomProd);
+                }
+            }
+            
+            options.sort(() => Math.random() - 0.5).forEach(prod => {
+                const button = document.createElement('button');
+                button.className = 'card bg-pink-100 text-pink-800 font-semibold py-3 px-2 rounded-lg border-2 border-pink-200 flex items-center justify-center space-x-2';
+                button.innerHTML = `<img src="${prod.image}" class="h-8 w-8 inline-block"><span>${prod.name}</span>`;
+                button.onclick = () => checkMemoryAnswer(prod.id === gameState.correctMemoryItem.id, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkMemoryAnswer(isCorrect, button) {
+            document.querySelectorAll('#memory-options button').forEach(btn => btn.disabled = true);
+            if (isCorrect) {
+                updateScore(15);
+                button.classList.remove('bg-pink-100', 'border-pink-200');
+                button.classList.add('bg-green-500', 'text-white', 'border-green-700', 'animate-tada');
+                AvatarController.excited();
+            } else {
+                button.classList.remove('bg-pink-100', 'border-pink-200');
+                button.classList.add('bg-red-500', 'text-white', 'border-red-700');
+                AvatarController.sad();
+            }
+            setTimeout(nextRound, 1500);
+        }
+
+        // --- Round 3: Bumper Tambola ---
+        function setupTambolaRound() {
+            gameState.tambolaCalled = [];
+            const ticketContainer = document.getElementById('tambola-ticket');
+            ticketContainer.innerHTML = '';
+            
+            // Generate a simple 3x2 ticket
+            let shuffledCategories = [...tambolaCategories].sort(() => 0.5 - Math.random());
+            gameState.tambolaTicket = shuffledCategories.slice(0, 6);
+            
+            gameState.tambolaTicket.forEach(cat => {
+                const cell = document.createElement('div');
+                cell.className = 'tambola-cell bg-white text-pink-900 font-bold p-3 rounded-md border-2 border-pink-300 text-sm md:text-base cursor-pointer transition-all duration-300';
+                cell.innerText = cat;
+                cell.dataset.category = cat;
+                cell.onclick = () => toggleTambolaCell(cell);
+                ticketContainer.appendChild(cell);
+            });
+            
+            tambolaCallInterval = setInterval(callTambolaNumber, 2000);
+        }
+
+        function callTambolaNumber() {
+            let available = tambolaCategories.filter(cat => !gameState.tambolaCalled.includes(cat));
+            if (available.length === 0) {
+                clearInterval(tambolaCallInterval);
+                return;
+            }
+            let called = available[Math.floor(Math.random() * available.length)];
+            gameState.tambolaCalled.push(called);
+            
+            const calledItemEl = document.getElementById('tambola-called-item');
+            calledItemEl.innerText = called;
+            calledItemEl.classList.add('animate-tada');
+            setTimeout(() => calledItemEl.classList.remove('animate-tada'), 1000);
+        }
+
+        function toggleTambolaCell(cell) {
+             const category = cell.dataset.category;
+             if (gameState.tambolaCalled.includes(category)) {
+                 cell.classList.toggle('striked');
+             }
+             checkClaimButton();
+        }
+
+        function checkClaimButton() {
+            const cells = document.querySelectorAll('.tambola-cell');
+            const row1Striked = Array.from(cells).slice(0, 3).every(c => c.classList.contains('striked'));
+            const row2Striked = Array.from(cells).slice(3, 6).every(c => c.classList.contains('striked'));
+            document.getElementById('tambola-claim-btn').disabled = !(row1Striked || row2Striked);
+        }
+
+        function checkTambolaWin() {
+            clearInterval(tambolaCallInterval);
+            const cells = document.querySelectorAll('.tambola-cell');
+            const row1Striked = Array.from(cells).slice(0, 3).every(c => c.classList.contains('striked'));
+            const row2Striked = Array.from(cells).slice(3, 6).every(c => c.classList.contains('striked'));
+            
+            if (row1Striked || row2Striked) {
+                updateScore(25);
+                AvatarController.celebrate();
+                AvatarController.speak('Bingo! Perfect!', 2000);
+                alert("Congratulations! Line complete!");
+            } else {
+                AvatarController.thinking();
+                AvatarController.speak('Oops! Try again next time!', 2000);
+                alert("Bogey! Your claim was wrong.");
+            }
+            setTimeout(endGame, 1000);
+        }
+
+        // --- End Game ---
+        function endGame() {
+            clearInterval(tambolaCallInterval); // Make sure interval is cleared
+            showScreen('score-screen');
+            document.getElementById('final-score').innerText = gameState.score;
+            
+            let rewardText, coupon;
+            if (gameState.score >= 40) {
+                rewardText = "Superstar Performance!";
+                coupon = "KITTYQUEEN"; // 20% off
+            } else if (gameState.score >= 20) {
+                rewardText = "Bahut Badiya Kheli Aap!";
+                coupon = "SMARTPLAYER"; // 10% off
+            } else {
+                rewardText = "Thanks for Playing!";
+                coupon = "KITTY5"; // 5% off
+            }
+            document.getElementById('reward-text').innerText = rewardText;
+            document.getElementById('coupon-code').innerText = coupon;
+        }
+
+        function shareOnWhatsApp() {
+            const score = gameState.score;
+            const text = `🎉 Maine "Kitty Party Dhamaka!" game mein ${score} points score kiye! Aap bhi khelo aur jeeto exciting rewards! 🎉`;
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
